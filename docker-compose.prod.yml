@@ -1,0 +1,36 @@
+# Production Docker Compose — datafeta.io
+#
+# Services:
+#   app      ghcr.io/henrywiechert/data-slicer        FastAPI + React frontend
+#   website  ghcr.io/henrywiechert/datafeta-website   nginx:alpine static site
+#
+# Ports are bound to 127.0.0.1 only.
+# Nginx on the host terminates TLS and proxies to these ports.
+# ClickHouse: not included — add in a future phase.
+#
+# Image tags are controlled via .env (updated by deploy-app.sh / deploy-website.sh).
+
+version: '3.9'
+
+services:
+  app:
+    image: ghcr.io/henrywiechert/data-slicer:${APP_TAG:-latest}
+    container_name: datafeta-app
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=info
+      - PORT=8000
+      - PYTHONUNBUFFERED=1
+      - REACT_APP_API_BASE=/api/v1
+      - SNAPSHOT_STORAGE_DIR=/app/data/snapshots
+    ports:
+      - "127.0.0.1:8100:8000"
+    volumes:
+      - ${SNAPSHOT_DIR:-/opt/datafeta-data/snapshots}:/app/data/snapshots
+
+  website:
+    image: ghcr.io/henrywiechert/datafeta-website:${WEBSITE_TAG:-latest}
+    container_name: datafeta-website
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8101:80"

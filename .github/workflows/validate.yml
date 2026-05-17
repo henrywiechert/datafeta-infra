@@ -1,0 +1,18 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate-nginx:
+    name: Nginx config syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate nginx configs
+        run: |
+          docker run --rm \
+            -v "$PWD/nginx:/etc/nginx/conf.d:ro" \
+            nginx:alpine nginx -t

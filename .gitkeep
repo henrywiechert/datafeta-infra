@@ -1,0 +1,19 @@
+# datafeta-infra — VPS infrastructure for datafeta.io
+#
+# Repos:
+#   app:     https://github.com/henrywiechert/data-slicer
+#   website: https://github.com/henrywiechert/datafeta-website
+#   infra:   https://github.com/henrywiechert/datafeta-infra  (this repo)
+#
+# VPS layout:
+#   /opt/datafeta-infra/        ← this repo, cloned on the VPS
+#   /opt/datafeta-data/
+#     snapshots/                ← persistent DataSlicer snapshot storage
+#
+# Host services: Nginx (TLS termination + reverse proxy), certbot (Let's Encrypt)
+# Containers:    app (port 8100), website (port 8101)
+#                All ports bound to 127.0.0.1 — Nginx proxies externally.
+#
+# First-time setup: see scripts/setup-vps.sh
+# Deploy app:       scripts/deploy-app.sh [TAG]
+# Deploy website:   scripts/deploy-website.sh [TAG]
