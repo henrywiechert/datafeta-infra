@@ -20,14 +20,32 @@ TAG=${1:-latest}
 
 echo "[deploy-app] Deploying tag: $TAG"
 
-# Persist tag so docker compose uses it on reboot
-if [[ -f "$ENV_FILE" ]]; then
-    if grep -q "^APP_TAG=" "$ENV_FILE"; then
-        sed -i "s/^APP_TAG=.*/APP_TAG=$TAG/" "$ENV_FILE"
+cd "$INFRA_DIR"
+
+upsert_env() {
+    local key="$1"
+    local value="$2"
+
+    touch "$ENV_FILE"
+    if grep -q "^${key}=" "$ENV_FILE"; then
+        sed -i "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
     else
-        echo "APP_TAG=$TAG" >> "$ENV_FILE"
+        echo "${key}=${value}" >> "$ENV_FILE"
     fi
-fi
+}
+
+# Persist tag so docker compose uses it on reboot
+upsert_env "APP_TAG" "$TAG"
+
+# Hosted app runs in demo mode. Keep these in .env so restarts/reboots preserve
+# the same restricted runtime profile even when docker compose is run manually.
+upsert_env "APP_MODE" "demo"
+upsert_env "SNAPSHOT_MODE" "readonly"
+upsert_env "CURATED_SNAPSHOT_DIR" "/app/data/snapshots"
+upsert_env "DEBUG_API_ENABLED" "false"
+upsert_env "DEBUG_UI_ENABLED" "false"
+upsert_env "CONNECTOR_ALLOWLIST" "csv"
+upsert_env "DEMO_DATASETS_ENABLED" "true"
 
 # Pull the new image
 APP_TAG="$TAG" docker compose -f "$COMPOSE_FILE" pull app
