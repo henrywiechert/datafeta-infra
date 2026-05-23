@@ -88,8 +88,9 @@ if [[ ! -d "$INFRA_DIR/.git" ]]; then
     sudo -u "$DEPLOY_USER" git clone "$INFRA_REPO" "$INFRA_DIR"
     echo "  Cloned $INFRA_REPO → $INFRA_DIR"
 else
+    chown -R "$DEPLOY_USER:$DEPLOY_USER" "$INFRA_DIR"
     sudo -u "$DEPLOY_USER" git -C "$INFRA_DIR" pull --ff-only
-    echo "  Already cloned — pulled latest"
+    echo "  Already cloned — ownership repaired and pulled latest"
 fi
 
 # ── Step 5: Create .env ──────────────────────────────────────────────────────

@@ -10,8 +10,6 @@
 #
 # Image tags are controlled via .env (updated by deploy-app.sh / deploy-website.sh).
 
-version: '3.9'
-
 services:
   app:
     image: ghcr.io/henrywiechert/data-slicer:${APP_TAG:-latest}
