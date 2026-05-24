@@ -48,6 +48,7 @@ services:
       - CLICKHOUSE_DEMO_PASSWORD=${CLICKHOUSE_DEMO_PASSWORD:-}
     volumes:
       - clickhouse-data:/var/lib/clickhouse
+      - ${CLICKHOUSE_DEMO_DATASET_DIR:-/opt/datafeta-data/demo-datasets}:/var/lib/clickhouse/user_files/demo-datasets
       - ./clickhouse/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]

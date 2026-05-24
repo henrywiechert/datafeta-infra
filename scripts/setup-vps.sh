@@ -77,10 +77,11 @@ echo "  Added $DEPLOY_USER to docker group"
 
 # ── Step 3: Create directories ───────────────────────────────────────────────
 echo "=== Step 3: Directories ==="
-mkdir -p "$INFRA_DIR" "$DATA_DIR/snapshots"
+mkdir -p "$INFRA_DIR" "$DATA_DIR/snapshots" "$DATA_DIR/demo-datasets"
 chown -R "$DEPLOY_USER:$DEPLOY_USER" "$INFRA_DIR" "$DATA_DIR"
 echo "  $INFRA_DIR"
 echo "  $DATA_DIR/snapshots"
+echo "  $DATA_DIR/demo-datasets"
 
 # ── Step 4: Clone infra repo ─────────────────────────────────────────────────
 echo "=== Step 4: Infra repo ==="
@@ -144,6 +145,7 @@ Next manual steps (in order):
 
   5. Edit $INFRA_DIR/.env:
        - set CLICKHOUSE_DEMO_PASSWORD to a real secret
+       - adjust CLICKHOUSE_DEMO_DATASET_DIR if you want a non-default host path
        - adjust CLICKHOUSE_DEMO_DATABASES if needed
 
   6. First deploy (pull images and start containers):
@@ -157,6 +159,7 @@ Next manual steps (in order):
        curl http://127.0.0.1:8100/api/v1/health   # should return {"status":"ok",...}
        curl http://127.0.0.1:8101/                 # should return website HTML
        sudo -u deploy docker compose -f $INFRA_DIR/docker-compose.prod.yml exec -T clickhouse clickhouse-client --query "SHOW DATABASES"
+       sudo -u deploy docker compose -f $INFRA_DIR/docker-compose.prod.yml exec -T clickhouse ls -la /var/lib/clickhouse/user_files/demo-datasets
        curl https://app.datafeta.io/api/v1/health  # after certbot
        curl https://datafeta.io/                   # after certbot
 
