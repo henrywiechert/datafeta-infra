@@ -1,13 +1,12 @@
 # Production Docker Compose — datafeta.io
 #
 # Services:
-#   app      ghcr.io/henrywiechert/data-slicer        FastAPI + React frontend
-#   website  ghcr.io/henrywiechert/datafeta-website   nginx:alpine static site
+#   app         ghcr.io/henrywiechert/data-slicer                 FastAPI + React frontend
+#   website     ghcr.io/henrywiechert/datafeta-website            nginx:alpine static site
+#   clickhouse  clickhouse/clickhouse-server                      internal demo database
 #
 # Ports are bound to 127.0.0.1 only.
 # Nginx on the host terminates TLS and proxies to these ports.
-# ClickHouse: not included — add in a future phase.
-#
 # Image tags are controlled via .env (updated by deploy-app.sh / deploy-website.sh).
 
 services:
@@ -29,14 +28,33 @@ services:
       - CONNECTOR_ALLOWLIST=${CONNECTOR_ALLOWLIST:-csv}
       - DEMO_DATASETS_ENABLED=${DEMO_DATASETS_ENABLED:-}
       - DEMO_DATASETS_JSON=${DEMO_DATASETS_JSON:-}
-      - DEMO_CLICKHOUSE_HOST=${DEMO_CLICKHOUSE_HOST:-}
+      - DEMO_CLICKHOUSE_HOST=${DEMO_CLICKHOUSE_HOST:-clickhouse}
       - DEMO_CLICKHOUSE_PORT=${DEMO_CLICKHOUSE_PORT:-8123}
-      - DEMO_CLICKHOUSE_USER=${DEMO_CLICKHOUSE_USER:-default}
-      - DEMO_CLICKHOUSE_PASSWORD=${DEMO_CLICKHOUSE_PASSWORD:-}
+      - DEMO_CLICKHOUSE_USER=${CLICKHOUSE_DEMO_USER:-demo_readonly}
+      - DEMO_CLICKHOUSE_PASSWORD=${CLICKHOUSE_DEMO_PASSWORD:-}
     ports:
       - "127.0.0.1:8100:8000"
     volumes:
       - ${SNAPSHOT_DIR:-/opt/datafeta-data/snapshots}:/app/data/snapshots
+
+  clickhouse:
+    image: ${CLICKHOUSE_IMAGE:-clickhouse/clickhouse-server:24.8}
+    container_name: datafeta-clickhouse
+    restart: unless-stopped
+    environment:
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+      - CLICKHOUSE_DEMO_DATABASES=${CLICKHOUSE_DEMO_DATABASES:-demo_penguins}
+      - CLICKHOUSE_DEMO_USER=${CLICKHOUSE_DEMO_USER:-demo_readonly}
+      - CLICKHOUSE_DEMO_PASSWORD=${CLICKHOUSE_DEMO_PASSWORD:-}
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./clickhouse/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
   website:
     image: ghcr.io/henrywiechert/datafeta-website:${WEBSITE_TAG:-latest}
@@ -44,3 +62,6 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:8101:80"
+
+volumes:
+  clickhouse-data:

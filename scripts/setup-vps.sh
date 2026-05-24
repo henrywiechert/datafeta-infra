@@ -142,13 +142,21 @@ Next manual steps (in order):
        GitHub → your profile → Packages → data-slicer → Package settings → Change visibility → Public
        GitHub → your profile → Packages → datafeta-website → Package settings → Change visibility → Public
 
-  5. First deploy (pull images and start containers):
+  5. Edit $INFRA_DIR/.env:
+       - set CLICKHOUSE_DEMO_PASSWORD to a real secret
+       - adjust CLICKHOUSE_DEMO_DATABASES if needed
+
+  6. First deploy (pull images and start containers):
        sudo -u deploy docker compose -f $INFRA_DIR/docker-compose.prod.yml pull
        sudo -u deploy docker compose -f $INFRA_DIR/docker-compose.prod.yml up -d
 
-  6. Verify:
+  7. Bootstrap ClickHouse demo access (idempotent):
+       sudo -u deploy $INFRA_DIR/scripts/bootstrap-clickhouse-demo.sh
+
+  8. Verify:
        curl http://127.0.0.1:8100/api/v1/health   # should return {"status":"ok",...}
        curl http://127.0.0.1:8101/                 # should return website HTML
+       sudo -u deploy docker compose -f $INFRA_DIR/docker-compose.prod.yml exec -T clickhouse clickhouse-client --query "SHOW DATABASES"
        curl https://app.datafeta.io/api/v1/health  # after certbot
        curl https://datafeta.io/                   # after certbot
 

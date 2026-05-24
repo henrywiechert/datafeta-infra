@@ -5,6 +5,16 @@ on:
   pull_request:
 
 jobs:
+  validate-compose:
+    name: Docker Compose config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker compose config
+        run: |
+          docker compose --env-file .env.example -f docker-compose.prod.yml config >/dev/null
+
   validate-nginx:
     name: Nginx config syntax
     runs-on: ubuntu-latest
